@@ -19,15 +19,20 @@ def create_bucket(bucket_name):
         print(f"Error checking/creating bucket: {e}")
         return False
 
-def upload_pdf_to_gcs(bucket_name, source_file_path, destination_blob_name):
+def upload_pdf_to_gcs(bucket_name, source_file_path, destination_blob_name, replace=False):
     """Uploads a PDF file to the specified Google Cloud Storage bucket."""
     storage_client = storage.Client()
 
     try:
         bucket = storage_client.bucket(bucket_name)
         blob = bucket.blob(destination_blob_name)
+
+        if blob.exists() and not replace:
+            print(f"File {destination_blob_name} already exists in bucket {bucket_name}. Skipping upload.")
+            return True
+
         blob.upload_from_filename(source_file_path)
-        print(f"File {source_file_path} uploaded to {destination_blob_name} in bucket {bucket_name}.")
+        print(f"File {source_file_path} {'replaced' if blob.exists() else 'uploaded'} to {destination_blob_name} in bucket {bucket_name}.")
         return True
     except Exception as e:
         print(f"Error uploading file: {e}")
